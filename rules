@@ -10,7 +10,6 @@ returnByRef=1
 globals=1
 indentSpace=0
 useClassBubble=1
-privateMethodUnderscore=0
 phpFileClosingTag=1
 classStudlyCaps=1
 methodsCamelCase=1
