@@ -1,0 +1,22 @@
+{
+    "name": "phase/finch",
+    "description": "Keep your code in style rules",
+    "license": "MIT",
+    "keywords": ["code","style","rules","codestyle","coderules"],
+    "authors": [
+        {
+            "name": "Strahinja Djuric",
+            "email": "radju22@gmail.com"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": {
+            "Phase\\Finch\\": "src/"
+        }
+    },
+
+    "bin": [
+        "finch"
+    ]
+}

@@ -1,0 +1,41 @@
+<?php
+
+namespace Phase\Finch;
+
+class ErrorManager {
+    public $collection = [];
+
+    private function set( $file, $message, $level ) {
+        if( ! isset($this->collection[$file])) {
+            $this->collection[$file] =
+            [
+              "warning" => [],
+              "error" => []
+            ];
+        }
+
+        array_push($this->collection[$file][$level], $message);
+    }
+
+    public function setError( $file, $message ) {
+        return $this->set($file, $message, "error");
+    }
+
+    public function setWarning( $file, $message ) {
+        return $this->set($file, $message, "warning");
+    }
+
+    public function getCollection() {
+        return $this->__get('collection');
+    }
+
+    public function __get($var) {
+        if(property_exists($this,$var)) {
+            return $this->$var;
+        } else {
+            return NULL;
+        }
+    }
+
+
+}
