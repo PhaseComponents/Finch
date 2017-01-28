@@ -3,8 +3,10 @@
 namespace Phase\Finch\File;
 
 use Closure;
+use PhpParser\ParserFactory;
 use Phase\Finch\ErrorManager;
 use Phase\Finch\Console\Message;
+use PhpParser\Error as ParsingError;
 
 /**
  * All rules that can be runned on specific file
@@ -16,11 +18,20 @@ class File extends FileAttributes {
      * @param string $name     File name
      * @param array  $rules    Rules that will be applied on file
      */
-    public function __construct(array $contents, string $name, array $rules) {
+    public function __construct(string $contents, string $name, array $rules) {
         $this->contents = $contents;
         $this->rules = $rules;
         $this->name = $name;
         $this->error = new ErrorManager();
+
+        $parser = (new ParserFactory)->create(ParserFactory::ONLY_PHP7);
+
+        try {
+            $this->stmts = $parser->parse($contents);
+            var_dump($this->stmts);
+        } catch (ParsingError $e) {
+            $this->error->setError($this->name, $e->getMessage());
+        }
     }
     /**
      * Force namespace to be used for class
@@ -28,22 +39,12 @@ class File extends FileAttributes {
      * @return void
      */
     public function forceNamespace( $value ) {
-        $this->fileIterator(function($line,$content) use ($value, $namespace) {
-          static $namespace = 0;
+        if( ! $this->isNamespace($this->stmts[0])) {
+            $this->error->setError($this->name, "Namespace not found");
+            return 0;
+        }
 
-          if(substr(trim($content),0,strlen(self::NAMESPACE_DECLARATION)) == self::NAMESPACE_DECLARATION) {
-              $namespace = 1;
-          }
-
-          if(substr(trim($content),0,strlen(self::CLASS_DECLARATION)) == self::CLASS_DECLARATION) {
-              if( ! $namespace) {
-                  $this->error->setError($this->name, "Namespace not found");
-                  return 0;
-              }
-          }
-
-          return 1;
-        });
+        return 1;
     }
     /**
      * Looks for line length in file
@@ -288,9 +289,9 @@ class File extends FileAttributes {
      * @return void
      */
     protected function fileIterator(Closure $cb) {
-      foreach($this->contents as $line => $content) {
+      foreach($this->stmts[0]->stmts as $stmt) {
           // if function returns 0 atleast once, we stop to call it
-          $r = $cb(($line+1),$content);
+          $r = $cb($stmt);
 
           if( ! $r) {
               break;

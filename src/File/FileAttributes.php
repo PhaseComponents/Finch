@@ -19,21 +19,21 @@ class FileAttributes {
      */
     protected $rules;
     /**
+     * Parsed file
+     * @var array
+     */
+    protected $stmts;
+    /**
      * Object for collecting errors
      * @var phase\Finch\ErrorManager
      */
     public $error;
 
-    const START_FILE_TAG = "<?php";
-    const END_FILE_TAG = "?>";
-    const CLASS_DECLARATION = "class";
-    const USE_DECLARATION = "use";
-    const FUNCTION_DECLARATION = "function";
-    const NAMESPACE_DECLARATION = "namespace";
-    const PRIVATE_METHOD_DECLARATION = "private";
-    const PUBLIC_METHOD_DECLARATION = "public";
-    const PROTECTED_METHOD_DECLARATION = "protected";
-    const STATEMENT_OPENING_BRACKET = "{";
-    const STATEMENT_CLOSING_BRACKET = "}";
-    const END_OF_CODE_LINE = ";";
+    public function isNamespace($type) : bool {
+        if($type instanceof \PhpParser\Node\Stmt\Namespace_) {
+            return true;
+        } else {
+            return false;
+        }
+    }
  }
