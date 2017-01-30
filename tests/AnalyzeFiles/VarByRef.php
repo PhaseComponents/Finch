@@ -1,5 +1,6 @@
 <?php
 
+namespace AnalyzeFiles;
 
 class VarByRef
 {

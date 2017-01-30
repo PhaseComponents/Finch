@@ -23,12 +23,12 @@ class File extends FileAttributes {
         $this->rules = $rules;
         $this->name = $name;
         $this->error = new ErrorManager();
+        $this->fileArray = file($name);
 
         $parser = (new ParserFactory)->create(ParserFactory::ONLY_PHP7);
 
         try {
             $this->stmts = $parser->parse($contents);
-            var_dump($this->stmts);
         } catch (ParsingError $e) {
             $this->error->setError($this->name, $e->getMessage());
         }
@@ -38,7 +38,7 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function forceNamespace( $value ) {
+    public function forceNamespace() {
         if( ! $this->isNamespace($this->stmts[0])) {
             $this->error->setError($this->name, "Namespace not found");
             return 0;
@@ -51,13 +51,11 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function lineLength( $value ){
-        $this->fileIterator(function($line,$content) use ($value) {
-            if(strlen($content) >= $value) {
-              $this->error->setError($this->name, "Line length exceeded : Line $line");
+    public function lineLength( $stmt, $attr, $value ) {
+        $this->fileIterator(function($line, $content) use ($value) {
+            if(strlen($content) > $value) {
+                $this->error->setError($this->name, "line length exceeded: Line $line");
             }
-
-            return 1;
         });
     }
     /**
@@ -65,73 +63,75 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function elseif( $value ) {
-        $this->fileIterator(function($line,$content) use ($value){
-          if(preg_match("/else if/i", $content)) {
-              $this->error->setError($this->name, "else if statement is forbiden: Line $line");
+    public function elseif( $stmt, $attr ) {
+      if(property_exists($stmt, "elseifs") && count($stmt->elseifs) > 0) {
+          foreach($stmt->elseifs as $elseif) {
+              $this->error->setError($this->name, "elseif statement is forbiden: Line " . $elseif->getAttributes()["startLine"]);
           }
+      }
 
-          return 1;
-        });
+        return 1;
     }
     /**
      * Forbid usage of "else" statements
      * @param  mixed $value
      * @return void
      */
-    public function else( $value ) {
-      $this->fileIterator(function($line,$content) use ($value){
-          if(preg_match("/(else[\\s]?[{])|(else[\\n])/i", $content)) {
-              $this->error->setError($this->name, "else statement is forbiden: Line $line");
-          }
+    public function else( $stmt, $attr ) {
+        if(property_exists($stmt, "else") && ! is_null($stmt->else)) {
+            $line = $stmt->else->getAttributes()["startLine"];
+            $this->error->setError($this->name, "else statement is forbiden: Line " . $line);
+        }
 
-          return 1;
-      });
+        return 1;
     }
     /**
      * Forbid usage of "goto"
      * @param  mixed $value
      * @return void
      */
-    public function goto( $value ) {
-      $this->fileIterator(function($line,$content) use ($value){
-          if(preg_match("/goto (.*)/i", $content)) {
-              $this->error->setError($this->name, "goto statement is forbiden: Line $line");
-          }
+    public function goto( $stmt, $attr ) {
+        if($this->isGoto($stmt)) {
+            $this->error->setError($this->name, "goto statement is forbiden: Line " . $attr["startLine"]);
+        }
 
-          return 1;
-      });
+        return 1;
     }
     /**
      * Forbid usage of inline brackets for statements, declarations, etc
      * @param  mixed $value
      * @return void
      */
-    public function forbidInlineBracket( $value ) {
-        $this->fileIterator(function($line,$content) use ($value) {
-            $content = trim($content);
-            $last_char = substr($content, -1);
+    public function forbidInlineBracket( $stmt, $attr ) {
+        if($this->isClass($stmt)) {
+            $classString = $this->getLine($attr["startLine"]);
+            $openBracketToken = trim($classString)[-1];
 
-            if($last_char == self::STATEMENT_OPENING_BRACKET && strlen($content) != 1) {
-                $this->error->setError($this->name, "have inline opening bracket: Line $line");
+            if($openBracketToken == "{") {
+                $this->error->setError($this->name, "opening brace for class must start in new line: Line " . $attr["startLine"]);
             }
+        }
 
-            return 1;
-        });
+        if($this->isClassMethod($stmt)) {
+            $classString = $this->getLine($attr["startLine"]);
+            $openBracketToken = trim($classString)[-1];
+
+            if($openBracketToken == "{") {
+                $this->error->setError($this->name, "opening brace for class method must start in new line: Line " . $attr["startLine"]);
+            }
+        }
     }
     /**
      * Forbid usage of "eval"
      * @param  mixed $value
      * @return void
      */
-    public function eval() {
-      $this->fileIterator(function($line,$content) {
-          if(preg_match("/eval[(].*[)]/i", $content)) {
-             $this->error->setError($this->name, "have forbiden function eval(): Line $line");
-          }
+    public function eval( $stmt, $attr ) {
+        if($this->isEval($stmt)) {
+            $this->error->setError($this->name, "eval function is forbiden: Line " . $attr["startLine"]);
+        }
 
-          return 1;
-      });
+        return 1;
     }
     /**
      * Forbid usage of referenced variables
@@ -152,14 +152,11 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function returnByRef() {
-      $this->fileIterator(function($line,$content) {
-          if(preg_match("/function &(.*)/i", $content)) {
-             $this->error->setError($this->name, "returning by reference is forbiden: Line $line");
-          }
-
-          return 1;
-      });
+    public function returnByRef( $stmt, $attr ) {
+        if($this->isClassMethod($stmt) && $stmt->byRef) {
+            $line = $attr["startLine"];
+            $this->error->setError($this->name, "returning by reference is forbiden: Line $line");
+        }
     }
     /**
      * Forbid usage of globals
@@ -283,22 +280,21 @@ class File extends FileAttributes {
         });
     }
 
-    /**
-     * Iterating through file content
-     * @param  Closure $cb
-     * @return void
-     */
-    protected function fileIterator(Closure $cb) {
-      foreach($this->stmts[0]->stmts as $stmt) {
-          // if function returns 0 atleast once, we stop to call it
-          $r = $cb($stmt);
+    protected function stmt($stmts, Closure $cb) {
+        foreach($stmts as $stmt) {
+            if(property_exists($stmt,"stmts")) {
+                if(count($stmt->stmts) > 0) {
+                    $cb($stmt->stmts);
+                    $this->stmt($stmt->stmts, $cb);
+                }
+            }
+        }
+    }
 
-          if( ! $r) {
-              break;
-          } else {
-              continue;
-          }
-      }
+    protected function fileIterator(Closure $cb) {
+        foreach($this->fileArray as $line => $content) {
+            $cb(($line + 1), $content);
+        }
     }
 
     /**
@@ -311,8 +307,10 @@ class File extends FileAttributes {
 
         foreach($this->rules as $rule => $value) {
             if(method_exists($this,$rule)) {
-                if($value) {
-                    call_user_func(array($this,$rule), $value);
+                if($value && ! is_null($this->stmts)) {
+                    $this->stmt($this->stmts, function($stmt) use ($rule, $value) {
+                       call_user_func(array($this,$rule), $stmt[0], $stmt[0]->getAttributes(), $value);
+                    });
                 }
             }
         }
