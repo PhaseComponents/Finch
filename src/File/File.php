@@ -47,18 +47,6 @@ class File extends FileAttributes {
         return 1;
     }
     /**
-     * Looks for line length in file
-     * @param  mixed $value
-     * @return void
-     */
-    public function lineLength( $stmt, $attr, $value ) {
-        $this->fileIterator(function($line, $content) use ($value) {
-            if(strlen($content) > $value) {
-                $this->error->setError($this->name, "line length exceeded: Line $line");
-            }
-        });
-    }
-    /**
      * Forbid usage of "else if" statements
      * @param  mixed $value
      * @return void
@@ -66,7 +54,7 @@ class File extends FileAttributes {
     public function elseif( $stmt, $attr ) {
       if(property_exists($stmt, "elseifs") && count($stmt->elseifs) > 0) {
           foreach($stmt->elseifs as $elseif) {
-              $this->error->setError($this->name, "elseif statement is forbiden: Line " . $elseif->getAttributes()["startLine"]);
+              $this->error->setError($this->name, "elseif statement is forbiden: Line " . $elseif->getAttribute("startLine"));
           }
       }
 
@@ -79,7 +67,7 @@ class File extends FileAttributes {
      */
     public function else( $stmt, $attr ) {
         if(property_exists($stmt, "else") && ! is_null($stmt->else)) {
-            $line = $stmt->else->getAttributes()["startLine"];
+            $line = $stmt->else->getAttribute("startLine");
             $this->error->setError($this->name, "else statement is forbiden: Line " . $line);
         }
 
@@ -138,14 +126,15 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function varByRef() {
-      $this->fileIterator(function($line,$content) {
-          if(preg_match("/&[$]/i", $content)) {
-             $this->error->setError($this->name, "passing by reference is forbiden: Line $line");
-          }
-
-          return 1;
-      });
+    public function varByRef( $stmt, $attr ) {
+        if($this->isClassMethod($stmt)) {
+            foreach($stmt->params as $param) {
+                if($param->byRef) {
+                    $line = $param->getAttribute('startLine');
+                    $this->error->setError($this->name, "passing variables by reference is forbiden: Line $line");
+                }
+            }
+        }
     }
     /**
      * Forbid usage of functions to return reference
@@ -163,14 +152,12 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function globals() {
-      $this->fileIterator(function($line,$content) {
-          if(preg_match("/[$]GLOBALS/i", $content)) {
-             $this->error->setError($this->name, "using globals is forbiden: Line $line");
-          }
-
-          return 1;
-      });
+    public function globals( $stmt, $attr ) {
+        if($this->isAssign($stmt)) {
+            if(property_exists($stmt,"expr") &&  property_exists($stmt->expr,"var") && $stmt->expr->var->name == "GLOBALS") {
+                $this->error->setError($this->name, "using globals is forbiden: Line " . $stmt->expr->var->getAttribute('startLine'));
+            }
+        }
     }
     /**
      * Forbids usage of spaces for indentation
@@ -178,42 +165,9 @@ class File extends FileAttributes {
      * @return void
      */
     public function indentSpace($value) {
-        $this->fileIterator(function($line,$content) use ($value) {
-            if(preg_match("/^[\t+]/", $content)) {
-                $this->error->setError($this->name, "using tabs for indentation is not allowed: Line $line");
-            }
-
-            return 1;
-
-        });
-    }
-    /**
-     * Force use class bubble sorting
-     * @param  mixed $value
-     * @return void
-     */
-    public function useClassBubble($value) {
-        $this->fileIterator(function($line,$content) use ($value) {
-            $content = trim($content);
-
-            if(substr($content, 0, 3) == self::USE_DECLARATION) {
-                static $useClassLength = 0;
-
-                if($useClassLength > strlen($content)) {
-                    $this->error->setError($this->name, "use class bubble sorting not correct: Line $line");
-                }
-
-                if($useClassLength < strlen($content)) {
-                    $useClassLength = strlen($content);
-                }
-
-            } else if(substr($content, 0, 5) == self::CLASS_DECLARATION) {
-                // stop iteration here since we don't count in trait uses
-                return 0;
-            }
-
-            return 1;
-        });
+        if(preg_match("/[\t+]/", $this->contents)) {
+            $this->error->setError($this->name, "using tabs for indentation is not allowed");
+        }
     }
 
     /**
@@ -221,17 +175,12 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function phpFileClosingTag($value) {
-        $this->fileIterator(function($line,$content) {
-            $content = trim($content);
+    public function phpFileClosingTag() {
+        if(preg_match("/[?]>/", end($this->fileArray))) {
+            $this->error->setError($this->name, "closing file tag ('?>') is forbiden: Line " . count($this->fileArray));
+        }
 
-            if(preg_match("/[?]>/", $content) && $line == count($this->contents)) {
-                $this->error->setError($this->name, "closing file tag ('?>') is forbiden: Line $line");
-
-            }
-
-            return 1;
-        });
+        return 1;
     }
 
     /**
@@ -239,47 +188,31 @@ class File extends FileAttributes {
      * @param  mixed $value
      * @return void
      */
-    public function classStudlyCaps($value) {
-        $this->fileIterator(function($line, $content) {
-            $content = trim($content);
-            if(substr($content, 0, strlen(self::CLASS_DECLARATION)) == self::CLASS_DECLARATION) {
-                $class = explode(" ", $content);
-                $classKey = array_search(self::CLASS_DECLARATION, $class);
-                $className = $class[$classKey+1];
-
-                if(preg_match("/([a-z])/", $className[0]) || preg_match("/[_]/", $className)) {
-                    $this->error->setError($this->name, "class names must follow rules for StudlyCaps naming: Line $line");
-
-                }
-            }
-
-            return 1;
-        });
+    public function classStudlyCaps( $stmt, $attr ) {
+        if($this->isClass($stmt)) {
+          if(preg_match("/([a-z])/", $stmt->name[0]) || preg_match("/[_]/", $stmt->name)) {
+              $this->error->setError($this->name, "class names must follow rules for StudlyCaps naming: Line " . $attr["startLine"]);
+          }
+        }
     }
     /**
      * Checks methods name for camelCase naming
      * @param  mixed $value
      * @return void
      */
-    public function methodsCamelCase($value) {
-        $this->fileIterator(function($line, $content) {
-            $content = trim($content);
-            if(preg_match("/(p.*) function/i", $content)) {
-                $splitLine = explode(" ", $content);
-                $key = array_search(self::FUNCTION_DECLARATION, $splitLine);
-                $methodKey = $key + 1;
-                $methodName = $splitLine[$methodKey];
-
-                if(preg_match("/[A-Z]/", $methodName[0]) || preg_match("/[_]/", $content)) {
-                    $this->error->setError($this->name, "method names must follow rules for camelCase naming: Line $line");
-                }
-
+    public function methodsCamelCase( $stmt, $attr ) {
+        if($this->isClassMethod($stmt)) {
+            if(preg_match("/[A-Z]/", $stmt->name[0]) || preg_match("/[_]/", $stmt->name)) {
+                $this->error->setError($this->name, "method names must follow rules for camelCase naming: Line " . $attr["startLine"]);
             }
-
-            return 1;
-        });
+        }
     }
-
+    /**
+     * Iterates over statements
+     * @param  mixed  $stmts
+     * @param  Closure $cb
+     * @return void
+     */
     protected function stmt($stmts, Closure $cb) {
         foreach($stmts as $stmt) {
             if(property_exists($stmt,"stmts")) {
@@ -288,12 +221,6 @@ class File extends FileAttributes {
                     $this->stmt($stmt->stmts, $cb);
                 }
             }
-        }
-    }
-
-    protected function fileIterator(Closure $cb) {
-        foreach($this->fileArray as $line => $content) {
-            $cb(($line + 1), $content);
         }
     }
 

@@ -20,6 +20,7 @@
         "finch"
     ],
     "require": {
-        "nikic/php-parser": "^3.0"
+        "nikic/php-parser": "^3.0",
+        "phpunit/phpunit": "^5.7"
     }
 }

@@ -77,10 +77,14 @@ class FileAttributes {
     }
 
     public function isEval($type) : bool {
-       return ($type instanceof PhpParser\Node\Expr\Eval_) ? true : false;
+       return ($type instanceof \PhpParser\Node\Expr\Eval_) ? true : false;
     }
 
-    public function isForeach($type) : bool {
+    public function isAssign($type) : bool {
+        return ($type instanceof \PhpParser\Node\Expr\Assign) ? true : false;
+    }
 
+    public function isUse($type) : bool {
+        return ($type instanceof \PhpParser\Node\Stmt\Use_) ? true : false;
     }
  }
