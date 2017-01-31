@@ -1,5 +1,5 @@
 # Finch
-**Finch** is code sniffing tool, with specific rules set you can check your code style and recieve report output something like this ``[file] [description] [line]``. **Finch** emerged from need of one company to keep code style clean and same on every project, we didn't wanted to make bigger differences across projects.
+**Finch** is code sniffing tool, with specific rules set you can check your code style and recieve report output. **Finch** emerged from need of one company to keep code style clean and same on every project, we didn't wanted to make bigger differences across projects.
 
 For arguments that should be passed to **Finch** check **help.txt**
 
@@ -79,8 +79,6 @@ For arguments that should be passed to **Finch** check **help.txt**
 
 The following rules are supported in this version, while we actively work on this project, many more will be supported in future. For example of some basic setup you can take a look at **rules** file.
 
-* #### lineLength
-    can hold values from 0 to n, it checks line length in file.
 
 * #### forceNamespace
     Forcing namespaces in files. No global scope is allowed.
@@ -112,9 +110,6 @@ The following rules are supported in this version, while we actively work on thi
 
 * #### indentSpace
     Force usage of spaces, using tabs is forbiden
-
-* #### useClassBubble
-    Force to sort use declarations from shorter to longer
 
 * #### phpFileClosingTag
     Forbid usage of php file closing tag (?>) at the end of php files

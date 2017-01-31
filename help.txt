@@ -1,6 +1,6 @@
 ---------------------------------------------------------------
 
-CodeStyle Help v1.0.0
+Finch Help v2.0.0
 
 --rules : Passing rules file that will be used for analyze (DEFAULT: ./rules)
 --path : Path to project that will be analyzed, or single file
