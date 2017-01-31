@@ -4,7 +4,7 @@ namespace AnalyzeFiles;
 
 class IndentSpace
 {
-    public function iUsedTabsHere()
+	public function iUsedTabsHere()
     {
 
     }

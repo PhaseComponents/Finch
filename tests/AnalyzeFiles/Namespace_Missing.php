@@ -2,5 +2,8 @@
 
 class NamespaceMissing
 {
+    public function someMethod()
+    {
 
+    }
 }

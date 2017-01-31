@@ -82,7 +82,7 @@ class Analyzer extends Options {
 
         foreach($this->collection as $file) {
             if(is_readable($file)) {
-                $fp = file($file);
+                $fp = file_get_contents($file);
 
                 $f = new File($fp, $file, $this->rules);
                 $f->analyze($this->options);

@@ -10,7 +10,7 @@ class ElseifUsed
         {
 
         }
-        else if($test)
+        elseif($test)
         {
 
         }

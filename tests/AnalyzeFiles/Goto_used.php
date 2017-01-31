@@ -1,11 +1,13 @@
 <?php
 
-namespace Goto;
+namespace AnalyzeFiles;
 
-class Goto
+class Goto_used
 {
     public function used()
     {
         goto hell;
     }
 }
+
+hell: echo("Burn!");

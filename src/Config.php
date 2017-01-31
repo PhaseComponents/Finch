@@ -19,9 +19,9 @@ class Config {
      */
     public function load( $path ) : array {
         if(is_null($path)) {
-            $this->_parse(dirname(dirname(__FILE__)) . "/rules");
+            $this->parse(dirname(dirname(__FILE__)) . "/rules.ini");
         } else {
-            $this->_parse($path);
+            $this->parse($path);
         }
 
         return $this->configuration;
@@ -32,17 +32,7 @@ class Config {
      * @param string $file Path to file which to Parse
      * @return void
      */
-    private function _parse(string $file) {
-        $contents = file_get_contents($file);
-
-        $values = explode("\n", $contents);
-        foreach($values as $value) {
-            $settings = explode("=", $value);
-
-            if(! empty($settings[0]))
-                $this->configuration[$settings[0]] = $settings[1];
-
-        }
-
+    private function parse(string $file) {
+        $this->configuration = parse_ini_file($file);
     }
 }

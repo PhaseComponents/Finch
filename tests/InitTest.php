@@ -1,9 +1,9 @@
 <?php
 
-use Phase\CodeStyle\File\FileCollection;
-use Phase\CodeStyle\Init;
-use Phase\CodeStyle\Config;
-use Phase\CodeStyle\Analyzer;
+use Phase\Finch\File\FileCollection;
+use Phase\Finch\Init;
+use Phase\Finch\Config;
+use Phase\Finch\Analyzer;
 /**
  * Initialize CodeStyle
  */
@@ -19,7 +19,7 @@ class InitTest extends PHPUnit_Framework_TestCase {
 
         $options = [
          "path" => "./tests/AnalyzeFiles",
-         "rules" => "./tests/testRules"
+         "rules" => "./tests/testRules.ini"
         ];
 
         // init rules to force
@@ -31,9 +31,8 @@ class InitTest extends PHPUnit_Framework_TestCase {
         $analyzer = new Analyzer($collection, $this->config->load($rules), $options);
         $analyzer->run($dat);
 
-        $this->assertEquals(count($analyzer->__get('error')->getCollection()), 15);
+        $this->assertEquals(count($analyzer->__get('error')->getCollection()), 13);
 
-        $this->assertArrayHasKey("./tests/AnalyzeFiles/Linelength_Exceeded.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Namespace_Missing.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Else_used.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Elseif_used.php", $analyzer->__get('error')->getCollection());
@@ -44,12 +43,9 @@ class InitTest extends PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey("./tests/AnalyzeFiles/ReturnByRef.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Globals.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/IndentSpace.php", $analyzer->__get('error')->getCollection());
-        $this->assertArrayHasKey("./tests/AnalyzeFiles/UseClassBubbleSort.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/PhpFileClosingTag.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/StudlyCapsClassNameNotUsed.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/CamelCaseMethodsNotUsed.php", $analyzer->__get('error')->getCollection());
 
-        $this->assertEquals(count($analyzer->__get('error')->getCollection()["./tests/AnalyzeFiles/Else_used.php"]["error"]), 2);
-        $this->assertEquals(count($analyzer->__get('error')->getCollection()["./tests/AnalyzeFiles/CamelCaseMethodsNotUsed.php"]["error"]), 2);
-    }
+   }
 }
