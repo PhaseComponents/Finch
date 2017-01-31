@@ -31,7 +31,7 @@ class InitTest extends PHPUnit_Framework_TestCase {
         $analyzer = new Analyzer($collection, $this->config->load($rules), $options);
         $analyzer->run($dat);
 
-        $this->assertEquals(count($analyzer->__get('error')->getCollection()), 13);
+        $this->assertEquals(count($analyzer->__get('error')->getCollection()), 16);
 
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Namespace_Missing.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/Else_used.php", $analyzer->__get('error')->getCollection());
@@ -46,6 +46,8 @@ class InitTest extends PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey("./tests/AnalyzeFiles/PhpFileClosingTag.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/StudlyCapsClassNameNotUsed.php", $analyzer->__get('error')->getCollection());
         $this->assertArrayHasKey("./tests/AnalyzeFiles/CamelCaseMethodsNotUsed.php", $analyzer->__get('error')->getCollection());
+        $this->assertArrayHasKey("./tests/AnalyzeFiles/useBubbleSort.php", $analyzer->__get('error')->getCollection());
+        $this->assertArrayHasKey("./tests/AnalyzeFiles/lineLengthExceeded.php", $analyzer->__get('error')->getCollection());
 
    }
 }

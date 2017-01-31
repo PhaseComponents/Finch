@@ -17,6 +17,11 @@ class Terminal implements Output {
     public function printOut() {
         print "\n";
 
+        if(count($this->error->getCollection()) < 1) {
+            Message::success("Everything is OK!");
+            return 0;
+        }
+
         foreach($this->error->getCollection() as $file => $errors) {
             $this->delimiter(strlen($file));
             Message::success($file);

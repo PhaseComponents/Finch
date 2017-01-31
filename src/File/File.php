@@ -33,6 +33,14 @@ class File extends FileAttributes {
             $this->error->setError($this->name, $e->getMessage());
         }
     }
+    public function lineLength( $stmt, $attr, $value ) {
+        $lineLength = strlen($this->getLine($attr["startLine"]));
+
+        if($lineLength > $value) {
+            $this->error->setError($this->name, "line lenght exceeded: Line " . $attr["startLine"]);
+        }
+
+    }
     /**
      * Force namespace to be used for class
      * @param  mixed $value
@@ -106,6 +114,20 @@ class File extends FileAttributes {
 
             if($openBracketToken == "{") {
                 $this->error->setError($this->name, "opening brace for class method must start in new line: Line " . $attr["startLine"]);
+            }
+        }
+    }
+
+    public function useBubbleSort( $stmt, $attr ) {
+        static $useStmtLength = 0;
+
+        if($this->isUse($stmt)) {
+            $lineLength = strlen($this->getLine($attr["startLine"]));
+
+            if($lineLength > $useStmtLength) {
+                $useStmtLength = $lineLength;
+            } else {
+                $this->error->setError($this->name, "use statement must be ordered from longer to shorter regarding character count. Line " . $attr["startLine"]);
             }
         }
     }
@@ -215,9 +237,9 @@ class File extends FileAttributes {
      */
     protected function stmt($stmts, Closure $cb) {
         foreach($stmts as $stmt) {
+            $cb($stmt);
             if(property_exists($stmt,"stmts")) {
                 if(count($stmt->stmts) > 0) {
-                    $cb($stmt->stmts);
                     $this->stmt($stmt->stmts, $cb);
                 }
             }
@@ -232,15 +254,15 @@ class File extends FileAttributes {
     public function analyze(array $options) {
         $this->options = $options;
 
-        foreach($this->rules as $rule => $value) {
-            if(method_exists($this,$rule)) {
-                if($value && ! is_null($this->stmts)) {
-                    $this->stmt($this->stmts, function($stmt) use ($rule, $value) {
-                       call_user_func(array($this,$rule), $stmt[0], $stmt[0]->getAttributes(), $value);
-                    });
+        $this->stmt($this->stmts, function($stmt) {
+            foreach($this->rules as $rule => $value) {
+                if(method_exists($this,$rule)) {
+                    if($value && ! is_null($this->stmts)) {
+                        call_user_func(array($this,$rule), $stmt, $stmt->getAttributes(), $value);
+                    }
                 }
             }
-        }
+        });
 
         return $this->error;
     }

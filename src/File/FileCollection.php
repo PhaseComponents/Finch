@@ -25,6 +25,7 @@ class FileCollection {
                 $this->collectFile($path);
             } else {
                 Message::error("{$path} doesn't exist or it isn't readable!");
+                exit();
             }
 
         }
