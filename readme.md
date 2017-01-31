@@ -80,6 +80,12 @@ For arguments that should be passed to **Finch** check **help.txt**
 The following rules are supported in this version, while we actively work on this project, many more will be supported in future. For example of some basic setup you can take a look at **rules** file.
 
 
+* #### lineLength
+    Value can be from 0 to n, it checks for maximum chars for each line.
+
+* #### useBubbleSort
+    Check for use statements sort from shorter to longer regarding string length.
+
 * #### forceNamespace
     Forcing namespaces in files. No global scope is allowed.
 

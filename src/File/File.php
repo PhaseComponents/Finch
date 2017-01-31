@@ -127,7 +127,7 @@ class File extends FileAttributes {
             if($lineLength > $useStmtLength) {
                 $useStmtLength = $lineLength;
             } else {
-                $this->error->setError($this->name, "use statement must be ordered from longer to shorter regarding character count. Line " . $attr["startLine"]);
+                $this->error->setError($this->name, "use statement must be ordered from shorter to longer regarding character count. Line " . $attr["startLine"]);
             }
         }
     }
