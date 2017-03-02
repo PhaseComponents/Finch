@@ -21,6 +21,8 @@
     ],
     "require": {
         "nikic/php-parser": "^3.0",
-        "phpunit/phpunit": "^5.7"
+        "phpunit/phpunit": "^5.7",
+        "webmozart/console": "~1.0@beta",
+        "phplucidframe/console-table": "^1.1"
     }
 }

@@ -5,13 +5,18 @@ namespace Phase\Finch;
 class ErrorManager {
     public $collection = [];
 
-    private function set( $file, $message, $level ) {
+    public function set( $file, $message, $level ) {
         if( ! isset($this->collection[$file])) {
             $this->collection[$file] =
             [
               "warning" => [],
               "error" => []
             ];
+        }
+
+        switch($level) {
+            case "error": $this->errorsCount++; break;
+            case "warning": $this->warningCount++; break;
         }
 
         array_push($this->collection[$file][$level], $message);

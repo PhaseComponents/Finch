@@ -1,0 +1,3 @@
+- var_dump detection
+- ability to define what will be warning/error
+- Draw table for reporting

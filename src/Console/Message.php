@@ -19,7 +19,7 @@ class Message {
      * @return void
      */
     public static function warning(string $msg) {
-        print " \e[33m $msg \e[0m \n";
+        print "\e[33m $msg \e[0m \n";
     }
     /**
      * Print success message
@@ -27,7 +27,7 @@ class Message {
      * @return void
      */
     public static function success(string $msg) {
-        print " \e[32m $msg \e[0m \n";
+        print "\e[32m $msg \e[0m \n";
     }
     /**
      * Print info message

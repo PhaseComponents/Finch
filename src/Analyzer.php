@@ -88,6 +88,8 @@ class Analyzer extends Options {
                 $f->analyze($this->options);
 
                 $this->error->collection = array_merge($this->error->collection, $f->error->collection);
+                $this->error->errorsCount += $f->error->errorsCount;
+                $this->error->warningCount += $f->error->warningCount;
 
             } else {
                 Message::error("$file is not readable.");
@@ -95,8 +97,8 @@ class Analyzer extends Options {
         }
 
 
-        $terminal = new \Phase\Finch\Report\Terminal($this->error);
-        $terminal->printOut();
+        $console = new \Phase\Finch\Report\Console($this->error);
+        $console->write();
 
         // call methods defined from options
         foreach($this->options as $option => $value) {
