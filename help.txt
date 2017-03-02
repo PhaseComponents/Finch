@@ -4,7 +4,6 @@ Finch Help v2.0.0
 
 --rules : Passing rules file that will be used for analyze (DEFAULT: ./rules)
 --path : Path to project that will be analyzed, or single file
---walk : Passing this option will tell Finch to stop on first error encountered, this is turned off by default
 --usage : Prints memory usage of script and time taken to process
 
 
